@@ -20,6 +20,7 @@
   (:use [backtype.storm config util log])
   (:use [backtype.storm.ui helpers])
   (:use [backtype.storm.daemon [common :only [ACKER-COMPONENT-ID system-id?]]])
+  (:use [clojure.java.shell :only [sh]])
   (:use [ring.adapter.jetty :only [run-jetty]])
   (:use [clojure.string :only [trim]])
   (:import [backtype.storm.utils Utils])
@@ -521,8 +522,11 @@
 
 (defn worker-log-link [host port]
   (link-to (url-format "http://%s:%s/log?file=worker-%s.log"
-              host (*STORM-CONF* LOGVIEWER-PORT) port) (str port)))
+              (get-aws-public-ip) (*STORM-CONF* LOGVIEWER-PORT) port) (str port)))
 
+(defn get-aws-public-ip []
+  (:out (sh "curl" "http://169.254.169.254/latest/meta-data/public-ipv4")))
+  
 (defn render-capacity [capacity]
   (let [capacity (nil-to-zero capacity)]
     [:span (if (> capacity 0.9)
