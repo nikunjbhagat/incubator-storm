@@ -519,13 +519,10 @@
 
 (defn component-link [storm-id id]
   (link-to (url-format "/topology/%s/component/%s" storm-id id) (escape-html id)))
-
-(defn get-aws-public-ip []
-  (:out (sh "curl" "http://169.254.169.254/latest/meta-data/public-ipv4")))
   
 (defn worker-log-link [host port]
   (link-to (url-format "http://%s:%s/log?file=worker-%s.log"
-              (get-aws-public-ip) (*STORM-CONF* LOGVIEWER-PORT) port) (str port)))
+              host (*STORM-CONF* LOGVIEWER-PORT) port) (str port)))
 
 (defn render-capacity [capacity]
   (let [capacity (nil-to-zero capacity)]

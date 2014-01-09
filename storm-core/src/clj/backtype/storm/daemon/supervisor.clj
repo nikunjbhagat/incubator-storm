@@ -17,6 +17,7 @@
   (:import [backtype.storm.scheduler ISupervisor])
   (:use [backtype.storm bootstrap])
   (:use [backtype.storm.daemon common])
+  (:use [clojure.java.shell :only [sh]])
   (:require [backtype.storm.daemon [worker :as worker]])
   (:gen-class
     :methods [^{:static true} [launch [backtype.storm.scheduler.ISupervisor] void]]))
@@ -180,6 +181,10 @@
     (try-cleanup-worker conf id))
   (log-message "Shut down " (:supervisor-id supervisor) ":" id))
 
+
+(defn get-my-public-ip []
+  (:out (sh "curl" "http://169.254.169.254/latest/meta-data/public-ipv4")))
+
 (defn supervisor-data [conf shared-context ^ISupervisor isupervisor]
   {:conf conf
    :shared-context shared-context
@@ -193,7 +198,7 @@
    :assignment-id (.getAssignmentId isupervisor)
    :my-hostname (if (contains? conf STORM-LOCAL-HOSTNAME)
                   (conf STORM-LOCAL-HOSTNAME)
-                  (local-hostname))
+                  (get-my-public-ip))
    :curr-assignment (atom nil) ;; used for reporting used ports when heartbeating
    :timer (mk-timer :kill-fn (fn [t]
                                (log-error t "Error when processing event")
